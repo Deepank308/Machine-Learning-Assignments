@@ -1,13 +1,12 @@
 """
 Deepank Agrawal
 17CS30011
-Assignment 3
-Naive Bayes Classifier with Laplacian smoothing
+Assignment 2 - Naive Bayes Classifier with Laplacian smoothing
 
 - Run command:
 $ python <file-name>
 
-- Make sure that train and test data is persent in the same folder
+- Make sure that train and test data is persent in the dataset folder
 """
 
 import numpy as np
@@ -91,7 +90,7 @@ def predict(data, class_cond_prob, apriori_prob):
 
 def main():
 
-    train_data, test_data = load_dataset('data2_19.csv', 'test2_19.csv')
+    train_data, test_data = load_dataset('../dataset/train.csv', '../dataset/test.csv')
     class_cond_prob, apriori_prob = train_model(train_data)
 
     # predict on train set

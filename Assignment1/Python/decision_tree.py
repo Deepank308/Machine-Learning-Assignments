@@ -1,16 +1,21 @@
-'''
-Name: Deepank Agrawal
-Roll: 17CS30011
+"""
+Deepank Agrawal
+17CS30011
 Assignment 1 - Decision Tree using ID3 algorithm
-Machine Learning course
-'''
+
+- Run command:
+$ python <file-name>
+
+- Make sure that train and test data is persent in the dataset folder
+"""
+
 import numpy as np
 import csv
 
 def load_data(data_path):
-    '''
+    """
     Load the data from csv file in (features, data-points) fashion
-    '''
+    """
     attributes = []
     target = []
     attr_dict = {}
@@ -36,9 +41,9 @@ def load_data(data_path):
 
 
 def calc_entropy(target_val):
-    '''
+    """
     Calculates entropy using summation(-p_i*log(p_i)) for the given target set
-    '''
+    """
     el, count = np.unique(target_val, return_counts=True)
     entropy = np.sum([((-1.0*count[i])/np.sum(count))*np.log2((1.0*count[i])/np.sum(count)) for i in range(len(el))])
 
@@ -46,9 +51,9 @@ def calc_entropy(target_val):
 
 
 def calc_info_gain(data, attr_split_num):
-    '''
+    """
     Takes data and attribute to split about as input and return the information gain
-    '''
+    """
     total_entropy = calc_entropy(data[-1])
 
     el, count = np.unique(data[attr_split_num], return_counts=True)
@@ -66,9 +71,9 @@ def calc_info_gain(data, attr_split_num):
 
     
 def build_tree(data, orig_data, attr_dict, attributes, neglect, parent_node=None):
-    '''
+    """
     Takes in dataset and attributes as input and build the decision tree recursively
-    '''
+    """
     # if all are 'yes' or 'no'
     if len(np.unique(data[-1])) <= 1:
         return np.unique(data[-1])[0]
@@ -143,7 +148,7 @@ def predict(data, tree, attr_dict):
 
 def main():
     # load data
-    data, attr_dict, attributes, neglect = load_data('./data1_19.csv')
+    data, attr_dict, attributes, neglect = load_data('../dataset/dataset.csv')
 
     # build and print tree
     tree = build_tree(data, data, attr_dict, attributes, neglect)
