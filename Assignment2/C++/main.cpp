@@ -6,7 +6,7 @@
 //
 
 /*
-  To compile : g++ -std=c++14 17CS10056_2.cpp
+  To compile : g++ -std=c++14 main.cpp
 */
 
 #include <iostream>
@@ -19,6 +19,8 @@
 
 using namespace std;
 
+// Global variable declaration begins
+
 vector<string> col_header;
 
 vector<vector<int> > train_feat;
@@ -29,8 +31,16 @@ vector<int> test_labels;
 
 vector<int> class_count(2);
 
-vector<double> p_class(2);
+// Global variable declaration ends
 
+
+/**
+ *  Splits a string at positions where the given character is found
+ *
+ *  @param line string to be split
+ *  @param c character at which to split
+ *  @return words that the string was split into
+ */
 vector<string> split(string line, char c) {
 
     vector<string> words;
@@ -48,6 +58,12 @@ vector<string> split(string line, char c) {
     return words;
 }
 
+/**
+ *  Constructs the count table for one feature column
+ *
+ *  @param table is the reference to be filled
+ *  @param col is the feature col no.
+ */
 void get_table(vector<vector<int> > &table, int col) {
 
     for(int i=0; i<train_feat.size(); i++) {
@@ -59,6 +75,11 @@ void get_table(vector<vector<int> > &table, int col) {
 
 }
 
+/**
+ *  Constructs the count table for all feature column
+ *
+ *  @param tables is the reference to be filled
+ */
 void construct_tables(vector<vector<vector<int> > >  &tables) {
 
     int num_feat = int(train_feat[0].size());
@@ -77,7 +98,12 @@ void construct_tables(vector<vector<vector<int> > >  &tables) {
 
 }
 
-void print_table(vector<vector<int> > &table, int feat) {
+/**
+ *  Prints the table for one feature column in a nice fashion
+ *
+ *  @param table to be printed
+ */
+void print_table(vector<vector<int> > &table) {
 
     cout << "    " << "  0" << " " << "  1" << "\n\n";
 
@@ -93,19 +119,31 @@ void print_table(vector<vector<int> > &table, int feat) {
 
 }
 
+/**
+ *  Prints the table for all feature columns in a nice fashion
+ *
+ *  @param tables to be printed
+ */
 void print_tables(vector<vector<vector<int> > > &tables) {
 
     for(int i=0; i<tables.size(); i++) {
 
         cout << string(15, '*') << "\n\n";
         cout << "     " << string("X") + to_string(i+1) << "\n\n";
-        print_table(tables[i], i);
+        print_table(tables[i]);
         cout << "\n\n";
 
     }
 
 }
 
+/**
+ *  Returns the predicted class for the given feature vetor
+ *
+ *  @param features is the given feature vector
+ *  @param tables is the output of the algorithm
+ *  @return the class predicted
+ */
 int predict(vector<vector<vector<int> > > &tables, vector<int> features) {
 
 
@@ -129,6 +167,11 @@ int predict(vector<vector<vector<int> > > &tables, vector<int> features) {
 
 }
 
+/**
+ *  Outputs the prediction for the entire test set
+ *
+ *  @param tables is calculated using the algorithm
+ */
 void predict_all(vector<vector<vector<int> > > &tables) {
 
     int correct = 0;
@@ -160,6 +203,12 @@ void predict_all(vector<vector<vector<int> > > &tables) {
 
 }
 
+/**
+ *  Reads and stores the data in global variable training_set and test_set
+ *
+ *  @param train_filepath is the path of the train file
+ *  @param test_filepath is the path of the test file
+ */
 void pre_process(string train_filepath, string test_filepath) {
 
     ifstream file;
@@ -205,12 +254,15 @@ void pre_process(string train_filepath, string test_filepath) {
     file.close();
 }
 
+/**
+ *  Driver Function
+ */
 int main(int argc, const char * argv[]) {
 
     pre_process("dataset/train.csv", "dataset/test.csv");
 
     vector<vector<vector<int> > > tables;
-    
+
     construct_tables(tables);
     print_tables(tables);
     predict_all(tables);

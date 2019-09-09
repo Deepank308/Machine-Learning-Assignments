@@ -1,5 +1,5 @@
 a.out:
-	g++ -std=c++14 17CS10056_2.cpp
+	g++ -std=c++14 main.cpp
 
 clean:
 	rm a.out
