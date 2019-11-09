@@ -1,18 +1,21 @@
 """
 Deepank Agrawal
 17CS30011
-Assignment 1 - Decision Tree using ID3 algorithm
+Assignment 3 - Adaboost algorithm using ID3 Decision trees as weak classifier.
 
 - Run command:
 $ python <file-name>
 
+- Use python2 to run the code
 - Make sure that train and test data is persent in the dataset folder
 """
 
 import numpy as np
 import csv
 
-def load_data(data_path):
+np.random.seed(0)
+
+def load_data(data_path, test=False):
     """
     Load the data from csv file in (features, data-points) fashion
     """
@@ -21,14 +24,17 @@ def load_data(data_path):
     attr_dict = {}
     with open(data_path, 'rt') as f:
         data = csv.reader(f)
-        i = 0
+        flag = 0
         for row in data:
-            if i == 0:
+            if flag == 0 and test == False:
                 for c in range(len(row) - 1):
                     attr_dict.update({c :row[c]})
                 attributes = [[] for _ in range(len(row) - 1)]
-                i = 1
+                flag = 1
                 continue
+            if flag == 0 and test == True:
+                attributes = [[] for _ in range(len(row) - 1)]
+                flag = 1
             for i in range(len(row) - 1):
                 attributes[i].append(row[i])
             target.append(row[-1])
@@ -123,47 +129,115 @@ def print_(tree, tabs_size=0):
             print_(tree[key][k], tabs_size + 1)
     return
 
-
-def predict(data, tree, attr_dict):
-    result = []
-    correct_count = 0
-    data_size = len(data[-1])
-    attr_size = len(data) - 1
-    for d in range(data_size):
-        tree_ = tree
+def predict_label(tree_, attr_dict, data, d):
+    """
+    Predict the label of a single data point
+    """
+    if type(tree_) == dict:
         key = tree_.keys()[0]
-        while True:
+    else:
+        return tree_
+    while True:
+        try:
             idx = attr_dict.keys()[attr_dict.values().index(key)]
             k = data[idx][d]
             tree_ = tree_[key][k]
             if type(tree_) != dict:
-                if tree_ == data[-1][d]:
-                    result.append('1')
-                    correct_count += 1
-                else:
-                    result.append('0')
-                break
+                return tree_
             key = tree_.keys()[0]
-    
-    for i, r in enumerate(result):
-        print("{} :: {}".format(i, r))
-        
-    print('Accuracy: {}%'.format((100.0*correct_count) / data_size))
-    return
+        except:
+            tree_ = 'no'
+            return tree_
+
+    return -1
+
+
+def predict_tree(data, tree, attr_dict, targets):
+    """
+    Predict the label of each data point and return the error count
+    """
+    correct_count = 0
+
+    data_size = len(data[-1])
+    attr_size = len(data) - 1
+
+    # print(data_size)
+    for d in range(data_size):
+        y_pred = predict_label(tree, attr_dict, data, d)
+        if y_pred == targets[d]:
+            correct_count += 1
+
+    return (data_size*1.0 - correct_count) / data_size
 
 
 
 def main():
-    # load data
-    data, attr_dict, attributes, neglect = load_data('../dataset/dataset.csv')
+    # load training data
+    data, attr_dict, attributes, neglect = load_data('./data3_19.csv')
 
-    # build and print tree
-    tree = build_tree(data, data, attr_dict, attributes, neglect)
-    print_(tree)
+    sample_size = int(len(data[0])*0.5)
+    NUM_ITR = 3
+    targets = data[-1]
+    weights = np.ones(len(data[0]), dtype=float) / len(data[0])
 
-    # test the decision tree on given dataset
-    predict(data, tree, attr_dict)
+    trees = []
+    indices = np.arange(len(data[0]))
+    alpha_list = []
 
+    # run iterations to train the weak classifiers
+    for i in range(NUM_ITR):
+        sample = np.random.choice(indices, sample_size, p = weights, replace=False)
+        
+        # prepare the sample set
+        sample_data = [[] for _ in range(len(data))]
+        for s in sample:
+            for d in range(len(data)):
+                sample_data[d].append(data[d][s])
+
+        # train the classifier
+        attributes = sample_data[:-1]
+        neglect_ = np.copy(neglect)
+        tree = build_tree(sample_data, sample_data, attr_dict, attributes, neglect_)
+
+        # calculate alpha
+        sample_targets = sample_data[-1]
+        e = predict_tree(sample_data, tree, attr_dict, sample_targets)
+        alpha = 0.5*np.log((1 - e) / (e + 1e-6))
+        alpha_list.append(alpha)
+
+        # update the weights
+        for s in sample:
+            y_pred = predict_label(tree, attr_dict, data, s)
+
+            if y_pred == targets[s]:
+                weights[s] = weights[s]*np.exp(-1.0*alpha)
+            else:
+                weights[s] = weights[s]*np.exp(alpha)
+
+        sum_weights = np.sum(weights)
+        weights = weights / sum_weights
+
+        # save the classifier
+        trees.append(tree)
+
+    # load the test set
+    data, _, _, _ = load_data('./test3_19.csv', test=True)
+    targets = data[-1]
+    pos_count = 0
+    # predict on the test set
+    for d in range(len(data[-1])):
+        pred = 0
+        for i in range(NUM_ITR):
+            y_pred = predict_label(trees[i], attr_dict, data, d)
+            if y_pred == targets[d]:
+                pred += alpha_list[i]
+            else:
+                pred -= alpha_list[i]
+        
+        if pred >= 0:
+            pos_count += 1
+
+    print('Test Accuracy: {}%'.format((100.0*pos_count) / len(data[-1])))
 
 if __name__ == '__main__':
     main()
